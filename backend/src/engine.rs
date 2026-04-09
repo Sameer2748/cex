@@ -1,11 +1,21 @@
 use crate::models::{Candle, Order, Side, Trade};
 use std::collections::BTreeMap;
+use serde::Serialize;
+
 
 #[derive(Debug)]
 pub struct OrderBook {
     pub bids: BTreeMap<u64, Vec<Order>>,
     pub asks: BTreeMap<u64, Vec<Order>>,
     pub candles: BTreeMap<u64, Candle>,
+}
+
+
+#[derive(Debug, Serialize, Clone)]
+pub struct OrderBookResponse{
+    // price, total quantiyt 
+    pub bids: Vec<(u64, u64)>,
+    pub asks: Vec<(u64, u64)>, 
 }
 
 impl OrderBook {
@@ -175,4 +185,22 @@ impl OrderBook {
         candle.volume += trade.qty;
         candle.trades_count += 1;
     }
+
+    pub fn get_order_books_table_data(&self, limit: usize)-> OrderBookResponse{
+        // what we did is first reverse the bid to tkae the highest value of the sellers
+        let bids = self.bids.iter().rev().take(limit)
+        // tthen we map over the arrays in it price and their order and we get sum of the quantity of those price orders 
+        .map(|(price, orders)| (*price, orders.iter().map(|o| o.qty).sum()))
+        .collect();
+
+        let asks = self.asks.iter().take(limit)
+        .map(|(price, orders)| (*price, orders.iter().map(|o| o.qty).sum()))
+        .collect();
+
+        OrderBookResponse {
+            bids,
+            asks,
+        }
+    }
+
 }

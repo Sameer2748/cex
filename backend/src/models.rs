@@ -23,7 +23,7 @@ pub enum Side {
 }
 
 #[derive(Debug, Clone, Serialize)]
-// candle struct 
+// candle struct
 pub struct Candle {
     pub timestamp: u64,
     pub open: u64,
@@ -37,7 +37,7 @@ pub struct Candle {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct BinanceTrade{
+pub struct BinanceTrade {
     #[serde(rename = "s")]
     pub symbol: String,
     #[serde(rename = "p")]
@@ -50,26 +50,45 @@ pub struct BinanceTrade{
     pub is_buyer_maker: bool,
 }
 
-
 impl BinanceTrade {
     pub fn get_price_u64(&self) -> u64 {
-        // parse as float the price 
+        // parse as float the price
         let value = self.price.parse::<f64>().unwrap();
-        // and multiply by 100 to get the pointer values also 
+        // and multiply by 100 to get the pointer values also
         (value * 100.0) as u64
     }
 
     pub fn get_qty_u64(&self) -> u64 {
-    let value = self.qty.parse::<f64>().unwrap_or(0.0);
-    
-    // Check the symbol!
-    let multiplier = match self.symbol.as_str() {
-        "BTCUSDT" => 100_000_000.0, // 8 decimals
-        "SOLUSDT" => 1_000_000_000.0, // 9 decimals
-        _ => 100.0, // Default to 2 decimals
-    };
-    
-    (value * multiplier) as u64
+        let value = self.qty.parse::<f64>().unwrap_or(0.0);
+
+        // Check the symbol!
+        let multiplier = match self.symbol.as_str() {
+            "BTCUSDT" => 100_000_000.0,   // 8 decimals
+            "SOLUSDT" => 1_000_000_000.0, // 9 decimals
+            _ => 100.0,                   // Default to 2 decimals
+        };
+
+        (value * multiplier) as u64
+    }
 }
 
+#[derive(Debug, Deserialize)]
+pub struct BinanceDepth {
+    // Remove the "rename" lines here!
+    pub bids: Vec<Vec<String>>,
+    pub asks: Vec<Vec<String>>,
+}
+
+pub fn string_to_u64_price(s: &str) -> u64 {
+    let value = s.parse::<f64>().unwrap_or(0.0);
+    (value * 100.0) as u64
+}
+
+pub fn string_to_u64_qty(s: &str, symbol: &str) -> u64 {
+    let value = s.parse::<f64>().unwrap_or(0.0);
+    let multiplier = match symbol {
+        "BTCUSDT" => 100_000_000.0,
+        _ => 100.0,
+    };
+    (value * multiplier) as u64
 }
