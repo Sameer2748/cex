@@ -1,0 +1,19 @@
+# Rust
+target/
+debug/
+release/
+
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+.env
+
+# MacOS
+.DS_Store
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
