@@ -8,7 +8,7 @@ pub struct Order {
     pub side: Side,
     pub timestamp: u64,
 }
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize)]
 pub struct Trade {
     pub price: u64,
     pub qty: u64,
@@ -16,7 +16,8 @@ pub struct Trade {
     pub taker_order_id: u64,
     pub timestamp: u64,
 }
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy,Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")] 
 pub enum Side {
     Buy,
     Sell,
@@ -92,3 +93,15 @@ pub fn string_to_u64_qty(s: &str, symbol: &str) -> u64 {
     };
     (value * multiplier) as u64
 }
+
+
+
+#[derive(Debug, Deserialize)]
+// order route struct 
+pub struct PlaceOrderRequest{
+    pub symbol: String,
+    pub price: String,
+    pub qty: String,
+    pub side: Side,
+}
+
