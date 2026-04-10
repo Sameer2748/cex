@@ -50,13 +50,22 @@ pub async fn place_order(
 
     let mut mg = manager.lock().unwrap();
     match mg.process_order(&payload.symbol, order) {
-        Ok((trades, remaining)) => {
+       Ok((trades, remaining)) => {
+            let readable_trades: Vec<serde_json::Value> = trades.iter().map(|t| {
+                serde_json::json!({
+                    "price": crate::models::u64_to_human_price(t.price),
+                    "qty": crate::models::u64_to_human_qty(t.qty, &payload.symbol),
+                    "maker_order_id": t.maker_order_id,
+                    "taker_order_id": t.taker_order_id,
+                    "timestamp": t.timestamp,
+                })
+            }).collect();
             Json(serde_json::json!({
                 "status": "success",
-                "matched_trades": trades,
-                "remaining_qty": remaining.map(|o| o.qty).unwrap_or(0)
+                "matched_trades": readable_trades, 
+                "remaining_qty": crate::models::u64_to_human_qty(remaining.map(|o| o.qty).unwrap_or(0), &payload.symbol)
             }))
-        },
-        Err(e) => Json(serde_json::json!({ "status": "error", "message": e }))
+        }, 
+        Err(_) => todo!()
     }
 }

@@ -73,6 +73,18 @@ impl BinanceTrade {
     }
 }
 
+
+
+
+#[derive(Debug, Deserialize)]
+// order route struct 
+pub struct PlaceOrderRequest{
+    pub symbol: String,
+    pub price: String,
+    pub qty: String,
+    pub side: Side,
+}
+
 #[derive(Debug, Deserialize)]
 pub struct BinanceDepth {
     // Remove the "rename" lines here!
@@ -94,14 +106,12 @@ pub fn string_to_u64_qty(s: &str, symbol: &str) -> u64 {
     (value * multiplier) as u64
 }
 
-
-
-#[derive(Debug, Deserialize)]
-// order route struct 
-pub struct PlaceOrderRequest{
-    pub symbol: String,
-    pub price: String,
-    pub qty: String,
-    pub side: Side,
+pub fn u64_to_human_price(val: u64) -> String {
+    format!("{:.2}", val as f64 / 100.0)
 }
+pub fn u64_to_human_qty(val: u64, symbol: &str) -> String {
+    let divisor = if symbol == "BTCUSDT" { 100_000_000.0 } else { 100.0 };
+    format!("{:.8}", val as f64 / divisor)
+}
+
 
