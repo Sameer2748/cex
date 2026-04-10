@@ -1,16 +1,20 @@
 use crate::engine::OrderBook;
 use crate::models::{BinanceDepth, BinanceTrade, Order, Side, Trade};
 use std::collections::HashMap;
+use sqlx::PgPool;
+
 
 pub struct EngineManager {
     pub books: HashMap<String, OrderBook>,
+    pub db: PgPool,
 }
 
 // we implement funcations for this struct
 impl EngineManager {
-    pub fn new() -> Self {
+    pub fn new(db:PgPool) -> Self {
         Self {
             books: HashMap::new(),
+            db,
         }
     }
 

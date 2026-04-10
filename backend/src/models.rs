@@ -115,3 +115,16 @@ pub fn u64_to_human_qty(val: u64, symbol: &str) -> String {
 }
 
 
+
+// login routes struct 
+#[derive(Debug, Deserialize)]
+pub struct RegisterRequest {
+    pub email: String,
+    pub password: String,
+}
+#[derive(Debug, Serialize)]
+pub struct AuthResponse {
+    pub status: String,
+    pub user_id: i32,
+    pub token: Option<String>,
+}

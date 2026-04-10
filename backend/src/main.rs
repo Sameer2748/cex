@@ -3,6 +3,7 @@ pub mod engine;
 pub mod manager;
 pub mod binance;
 pub mod api;
+pub mod db;
 
 
 use std::sync::{Arc, Mutex};
@@ -15,10 +16,12 @@ use api::{get_candles, get_orderbook, place_order};
 use manager::EngineManager;
 use std::time::Instant;
 use binance::monitor_binance_trades;
+use db::init_db;
 
 #[tokio::main]
 async fn main() {
-   let manager = Arc::new(Mutex::new(EngineManager::new()));
+    let pool = init_db().await.unwrap();
+   let manager = Arc::new(Mutex::new(EngineManager::new(pool)));
 
    // spawn the binance task in bg 
    let tr_manager = Arc::clone(&manager);
