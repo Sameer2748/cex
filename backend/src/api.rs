@@ -4,6 +4,8 @@ use crate::manager::EngineManager;
 use crate::models::{Candle};
 use crate::engine::OrderBookResponse;
 use crate::models::{PlaceOrderRequest, Order, Side};
+use crate::models::{RegisterRequest, AuthResponse};
+use bcrypt::{hash, DEFAULT_COST};
 
 
 pub async fn get_candles(Path(book): Path<String>, State(manager): State<Arc<Mutex<EngineManager>>>)-> impl IntoResponse {
@@ -69,3 +71,53 @@ pub async fn place_order(
         Err(_) => todo!()
     }
 }
+
+
+#[axum::debug_handler]
+pub async fn signup(State(manager): State<Arc<Mutex<EngineManager>>>, Json(payload): Json<RegisterRequest>)-> impl IntoResponse {
+    // first we will hash the password
+    let hashed_pasword = hash(&payload.password, DEFAULT_COST).unwrap();
+
+    // now we access the db from our manager
+    let db = {
+        let mg = manager.lock().unwrap();
+        mg.db.clone() // Clone the pool (it's just an Arc internally)
+    };
+
+    // now save user to db 
+    let data = sqlx::query!(
+        "INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING id",
+        payload.email,
+        hashed_pasword
+    ).fetch_one(&db).await;
+
+    match data {
+        Ok(data)=> { 
+            let _ = sqlx::query!(
+                "INSERT INTO balances (user_id, asset , amount) VALUES ($1, $2, $3)",
+                data.id,
+                "USDT",
+                1_000_000
+            ).execute(&db).await;
+
+            Json(AuthResponse {
+                status: "success".to_string(),
+                user_id: data.id,
+                token: None
+            })
+        },
+        Err(r) => {
+            println!("ERROR IS: {:?}", r.as_database_error());
+            Json(AuthResponse {
+                status: "user already present".to_string(),
+                user_id: 0,
+                token: None
+            })
+        }
+    }
+
+
+}
+// pub async fn signin (State(manager): State<Arc<Mutex<EngineManager>>>, Json(payload): Json<RegisterRequest>)-> impl IntoResponse {
+//     // first we will hash the password
+// }

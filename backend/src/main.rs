@@ -12,7 +12,7 @@ use std::net::SocketAddr;
 use std::time::{SystemTime, UNIX_EPOCH};
 use models::{Order, Side};
 use engine::OrderBook;
-use api::{get_candles, get_orderbook, place_order};
+use api::{get_candles, get_orderbook, place_order, signup};
 use manager::EngineManager;
 use std::time::Instant;
 use binance::monitor_binance_trades;
@@ -35,6 +35,7 @@ async fn main() {
    .route("/get_candles/:book", get(get_candles))
    .route("/orderbook/:book", get(get_orderbook))
    .route("/order", post(place_order))
+   .route("/signup", post(signup))
    .with_state(manager);
 
    let addr = SocketAddr::from(([127,0,0,1], 3000)); 
