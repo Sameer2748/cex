@@ -5,7 +5,7 @@ use crate::models::{Candle};
 use crate::engine::OrderBookResponse;
 use crate::models::{PlaceOrderRequest, Order, Side};
 use crate::models::{RegisterRequest, AuthResponse};
-use bcrypt::{hash, DEFAULT_COST};
+use bcrypt::{hash, verify, DEFAULT_COST};
 
 
 pub async fn get_candles(Path(book): Path<String>, State(manager): State<Arc<Mutex<EngineManager>>>)-> impl IntoResponse {
@@ -107,7 +107,15 @@ pub async fn signup(State(manager): State<Arc<Mutex<EngineManager>>>, Json(paylo
             })
         },
         Err(r) => {
-            println!("ERROR IS: {:?}", r.as_database_error());
+            println!("ERROR IS: {:?}", r.as_database_error().unwrap().code());
+            let code = r.as_database_error().unwrap().code();
+            if  code == Some("23505".into()) {
+                return Json(AuthResponse {
+                    status: "user already present".to_string(),
+                    user_id: 0,
+                    token: None
+                })
+            }
             Json(AuthResponse {
                 status: "user already present".to_string(),
                 user_id: 0,
@@ -118,6 +126,60 @@ pub async fn signup(State(manager): State<Arc<Mutex<EngineManager>>>, Json(paylo
 
 
 }
-// pub async fn signin (State(manager): State<Arc<Mutex<EngineManager>>>, Json(payload): Json<RegisterRequest>)-> impl IntoResponse {
-//     // first we will hash the password
-// }
+pub async fn signin (State(manager): State<Arc<Mutex<EngineManager>>>, Json(payload): Json<RegisterRequest>)-> impl IntoResponse {
+     let db = {
+        let mg = manager.lock().unwrap();
+        mg.db.clone() // Clone the pool (it's just an Arc internally)
+    };
+
+    // and the we check if user is present or not and if present then match user data and comapre password  return the token with other data like user id 
+    let user_data = sqlx::query!{
+        "SELECT id, password_hash FROM users WHERE email = $1",
+        payload.email
+    }.fetch_optional(&db).await;
+    
+    println!("user data is : {:?}", user_data);
+    // user data is : Ok(Some(Record { id: 8, password_hash: "$2b$12$TpYoapM0stbO3EQpDVSnZ.JyPHebBTkvJsxPczBiCpczSsndB8DmW" }))
+    // user data is : Ok(None)
+
+    match user_data {
+        // now we check if ok the db connection wroked and we got the data 
+        // we check if we have data 
+        Ok(Some(data))=> {
+            // compare the password 
+            let is_valid = verify(&payload.password, &data.password_hash).unwrap();
+
+            if is_valid {
+                Json(AuthResponse{
+                    status: "success".to_string(),
+                    user_id: data.id,
+                    token: None
+                })
+            }else {
+                Json(AuthResponse{
+                    status: "invalid password".to_string(),
+                    user_id: 0,
+                    token: None
+                })
+            }
+
+        },
+        // or it is empty 
+        Ok(None)=> {
+            Json(AuthResponse{
+                status: "user not found".to_string(),
+                user_id: 0,
+                token: None
+            })
+        },
+        Err(_)=> {
+            Json(AuthResponse{
+                status: "error".to_string(),
+                user_id: 0,
+                token: None
+            })
+        }
+    }
+
+    
+}

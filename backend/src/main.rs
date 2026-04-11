@@ -4,6 +4,7 @@ pub mod manager;
 pub mod binance;
 pub mod api;
 pub mod db;
+pub mod middleware;
 
 
 use std::sync::{Arc, Mutex};
@@ -12,7 +13,7 @@ use std::net::SocketAddr;
 use std::time::{SystemTime, UNIX_EPOCH};
 use models::{Order, Side};
 use engine::OrderBook;
-use api::{get_candles, get_orderbook, place_order, signup};
+use api::{get_candles, get_orderbook, place_order, signup, signin};
 use manager::EngineManager;
 use std::time::Instant;
 use binance::monitor_binance_trades;
@@ -36,6 +37,7 @@ async fn main() {
    .route("/orderbook/:book", get(get_orderbook))
    .route("/order", post(place_order))
    .route("/signup", post(signup))
+   .route("/signin", post(signin))
    .with_state(manager);
 
    let addr = SocketAddr::from(([127,0,0,1], 3000)); 
