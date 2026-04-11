@@ -102,10 +102,11 @@ pub async fn signup(State(manager): State<Arc<Mutex<EngineManager>>>, Json(paylo
                 1_000_000
             ).execute(&db).await;
 
+            let token = create_jwt(data.id).ok();
             Json(AuthResponse {
                 status: "success".to_string(),
                 user_id: data.id,
-                token: None
+                token: token
             })
         },
         Err(r) => {
@@ -141,7 +142,7 @@ pub async fn signin (State(manager): State<Arc<Mutex<EngineManager>>>, Json(payl
         payload.email
     }.fetch_optional(&db).await;
     
-    println!("user data is : {:?}", user_data);
+    // println!("user data is : {:?}", user_data);
     // user data is : Ok(Some(Record { id: 8, password_hash: "$2b$12$TpYoapM0stbO3EQpDVSnZ.JyPHebBTkvJsxPczBiCpczSsndB8DmW" }))
     // user data is : Ok(None)
 

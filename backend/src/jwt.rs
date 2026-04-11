@@ -1,4 +1,4 @@
-use jsonwebtoken::{encode, Header,EncodingKey, errors::Error };
+use jsonwebtoken::{encode, decode, Validation, Header,EncodingKey, DecodingKey,  errors::Error };
 use crate::models::Claims;
 use std::time::{SystemTime, UNIX_EPOCH};
 use dotenvy::dotenv;
@@ -9,7 +9,7 @@ pub fn get_secret() -> String {
     dotenv().ok();
 
     let secret_key = env::var("JWT_SECRET").expect("JWT SECRET NOT FOUND IN ENV");
-
+    secret_key
 }
 
 pub fn create_jwt(user_id: i32)-> Result<String, Error>{
@@ -31,7 +31,7 @@ pub async fn verify_token(token: String)-> Result<Claims, Error> {
     let secret_key = get_secret();
 
     let token_data = decode::<Claims>(
-        token, 
+        &token, 
         &DecodingKey::from_secret(secret_key.as_ref()), 
         &Validation::default()
     )?;

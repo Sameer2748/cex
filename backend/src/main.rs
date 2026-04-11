@@ -19,6 +19,8 @@ use manager::EngineManager;
 use std::time::Instant;
 use binance::monitor_binance_trades;
 use db::init_db;
+use middleware::auth_middleware;
+use axum::middleware::from_fn_with_state;
 
 #[tokio::main]
 async fn main() {
@@ -33,10 +35,11 @@ async fn main() {
 
 
    let app = Router::new()
-   .route("/health", get(healthcheck))
    .route("/get_candles/:book", get(get_candles))
    .route("/orderbook/:book", get(get_orderbook))
    .route("/order", post(place_order))
+   .layer(from_fn_with_state(manager.clone(), auth_middleware))
+   .route("/health", get(healthcheck))
    .route("/signup", post(signup))
    .route("/signin", post(signin))
    .with_state(manager);
