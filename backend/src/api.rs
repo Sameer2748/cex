@@ -6,6 +6,8 @@ use crate::engine::OrderBookResponse;
 use crate::models::{PlaceOrderRequest, Order, Side};
 use crate::models::{RegisterRequest, AuthResponse};
 use bcrypt::{hash, verify, DEFAULT_COST};
+use crate::jwt::create_jwt;
+
 
 
 pub async fn get_candles(Path(book): Path<String>, State(manager): State<Arc<Mutex<EngineManager>>>)-> impl IntoResponse {
@@ -126,6 +128,7 @@ pub async fn signup(State(manager): State<Arc<Mutex<EngineManager>>>, Json(paylo
 
 
 }
+
 pub async fn signin (State(manager): State<Arc<Mutex<EngineManager>>>, Json(payload): Json<RegisterRequest>)-> impl IntoResponse {
      let db = {
         let mg = manager.lock().unwrap();
@@ -150,10 +153,11 @@ pub async fn signin (State(manager): State<Arc<Mutex<EngineManager>>>, Json(payl
             let is_valid = verify(&payload.password, &data.password_hash).unwrap();
 
             if is_valid {
+                let token = create_jwt(data.id).ok();
                 Json(AuthResponse{
                     status: "success".to_string(),
                     user_id: data.id,
-                    token: None
+                    token: token
                 })
             }else {
                 Json(AuthResponse{

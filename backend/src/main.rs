@@ -5,6 +5,7 @@ pub mod binance;
 pub mod api;
 pub mod db;
 pub mod middleware;
+pub mod jwt;
 
 
 use std::sync::{Arc, Mutex};

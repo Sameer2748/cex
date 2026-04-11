@@ -128,3 +128,11 @@ pub struct AuthResponse {
     pub user_id: i32,
     pub token: Option<String>,
 }
+
+
+// jwt claim struct 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Claims {
+    pub sub: i32,      // Subject (User ID)
+    pub exp: usize,    // Expiration time (Timestamp)
+}
